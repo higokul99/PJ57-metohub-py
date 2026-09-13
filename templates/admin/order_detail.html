@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="admin-card" style="max-width:950px;margin:0 auto;">
+    <div class="card-header-bar">
+        <div><h2>Order #{{ order.order_number }}</h2><span style="color:var(--admin-text-muted);">{{ order.created_at.strftime('%B %d, %Y at %I:%M %p') if order.created_at else '' }}</span></div>
+        <a href="/admin/orders" class="btn btn-secondary">Back to Orders</a>
+    </div>
+    {% if updated %}<div class="admin-alert success auto-dismiss">Order status updated successfully!</div>{% endif %}
+    <div class="form-grid-3" style="margin-bottom:2rem;">
+        <div class="admin-card" style="background:rgba(0,0,0,0.2);"><h4 style="color:#fff;">Customer</h4><p><strong>{{ order.customer_name }}</strong></p><p>{{ order.customer_email }}</p><p>{{ order.customer_phone }}</p></div>
+        <div class="admin-card" style="background:rgba(0,0,0,0.2);"><h4 style="color:#fff;">Shipping</h4><p>{{ order.shipping_address }}</p><p>{{ order.city }}, {{ order.postal_code }}</p></div>
+        <div class="admin-card" style="background:rgba(0,0,0,0.2);"><h4 style="color:#fff;">Payment</h4><p>{{ order.payment_method.replace('_',' ')|upper }}</p><p><span class="badge-status {{ 'completed' if order.payment_status=='paid' else 'pending' }}">{{ order.payment_status|upper }}</span></p>{% if order.transaction_ref %}<p>UTR: {{ order.transaction_ref }}</p>{% endif %}</div>
+    </div>
+    {% if order.payment_proof or order.payment_method=='upi' %}
+    <div class="admin-card" style="margin-bottom:2rem;">
+        <h3 style="color:#fff;">Customer UPI Payment Verification</h3>
+        {% if order.payment_proof %}<a href="/{{ order.payment_proof }}" target="_blank"><img src="/{{ order.payment_proof }}" alt="Proof" style="max-height:280px;border-radius:10px;"></a>{% endif %}
+        {% if order.payment_status != 'paid' %}
+        <form method="POST" style="margin-top:1rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="status" value="{{ order.status }}">
+            <input type="hidden" name="payment_status" value="paid">
+            <button class="btn btn-success" type="submit">Verify & Confirm Payment as PAID</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
+    <div class="admin-card" style="background:rgba(0,0,0,0.2);">
+        <h3 style="color:#fff;">Order Line Items</h3>
+        <table class="admin-table">
+            <thead><tr><th>Product</th><th>Type</th><th>Notes</th><th>Unit</th><th>Qty</th><th>Total</th></tr></thead>
+            <tbody>
+            {% for item in order.items %}
+            <tr>
+                <td><strong style="color:#fff;">{{ item.product_name }}</strong></td>
+                <td>{% if item.is_rental %}<span class="badge-type rental">Rental</span>{% else %}<span class="badge-type retail">Sale</span>{% endif %}</td>
+                <td>{% if item.is_rental %}{{ item.rental_type }} • {{ item.rental_start_date }}{% else %}Standard{% endif %}</td>
+                <td>{{ currency }}{{ item.unit_price|money }}</td>
+                <td>{{ item.quantity }}</td>
+                <td><strong>{{ currency }}{{ item.line_total|money }}</strong></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div style="text-align:right;margin-top:1rem;font-size:1.8rem;font-weight:800;color:#fff;">{{ currency }}{{ order.total_amount|money }}</div>
+    </div>
+    <div class="admin-card" style="background:rgba(0,0,0,0.2);">
+        <h3 style="color:#fff;">Update Order Status</h3>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-grid-2">
+                <div class="admin-form-group"><label>Fulfillment Status</label>
+                    <select name="status" class="admin-select">
+                        {% for s in ['pending','processing','completed','cancelled'] %}
+                        <option value="{{ s }}" {% if order.status==s %}selected{% endif %}>{{ s|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="admin-form-group"><label>Payment Status</label>
+                    <select name="payment_status" class="admin-select">
+                        {% for s in ['pending','paid','refunded'] %}
+                        <option value="{{ s }}" {% if order.payment_status==s %}selected{% endif %}>{{ s|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% if order.notes %}<p style="color:var(--admin-text-muted);">Notes: {{ order.notes }}</p>{% endif %}
+            <button class="btn btn-primary" type="submit">Save Order Status</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

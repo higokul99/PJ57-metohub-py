@@ -1,0 +1,57 @@
+{% extends "store/base.html" %}
+{% block title %}Order Confirmation #{{ order.order_number }} — {{ tenant.name }}{% endblock %}
+{% block header_tag %}Order Confirmation{% endblock %}
+{% block body %}
+<main class="success-page-section"><div class="container" style="max-width:800px;">
+<div class="order-success-card">
+    <div class="success-icon-banner">
+        <div class="success-icon-circle"><i class="fas fa-check"></i></div>
+        <h1>Thank You for Your Order!</h1>
+        <p class="success-subtitle">Your order has been received and is being processed by <strong>{{ tenant.name }}</strong>.</p>
+    </div>
+    <div class="order-meta-pill-bar">
+        <div class="meta-pill-item"><span class="label">Order Reference</span><span class="value">{{ order.order_number }}</span></div>
+        <div class="meta-pill-item"><span class="label">Date</span><span class="value">{{ order.created_at.strftime('%b %d, %Y, %I:%M %p') if order.created_at else '' }}</span></div>
+        <div class="meta-pill-item"><span class="label">Payment Status</span><span class="value badge-pay {{ order.payment_status }}">{{ order.payment_status|upper }}</span></div>
+        <div class="meta-pill-item"><span class="label">Total</span><span class="value total-bold">{{ currency }}{{ order.total_amount|money }}</span></div>
+    </div>
+    <div class="order-receipt-box">
+        <h3 class="receipt-section-title">Order Line Items</h3>
+        {% for item in order.items %}
+        <div class="receipt-item-row">
+            <div class="col-desc"><strong>{{ item.product_name }}</strong>
+                {% if item.is_rental %}<span class="rental-receipt-tag">{{ 'Weekend Rental' if item.rental_type=='weekend' else (item.rental_days|string + ' Day Rental') }}</span>
+                {% else %}<span class="retail-receipt-tag">Standard Retail Purchase</span>{% endif %}
+            </div>
+            <div class="col-price">{{ currency }}{{ item.unit_price|money }}</div>
+            <div class="col-qty">{{ item.quantity }}</div>
+            <div class="col-total">{{ currency }}{{ item.line_total|money }}</div>
+        </div>
+        {% endfor %}
+        <div class="receipt-total-summary">
+            <div class="line grand-total"><span>Total Amount</span><span>{{ currency }}{{ order.total_amount|money }}</span></div>
+        </div>
+    </div>
+    <div class="customer-info-receipt-grid">
+        <div class="info-receipt-card">
+            <h4>Shipping & Contact</h4>
+            <p><strong>{{ order.customer_name }}</strong></p>
+            <p>{{ order.shipping_address }}</p>
+            <p>{{ order.city }}, {{ order.postal_code }}</p>
+            <p>{{ order.customer_email }}</p>
+            <p>{{ order.customer_phone }}</p>
+        </div>
+        <div class="info-receipt-card">
+            <h4>Payment & Fulfillment</h4>
+            <p>Payment Mode: <strong>{{ order.payment_method.replace('_',' ')|upper }}</strong></p>
+            {% if order.transaction_ref %}<p>UTR Ref: <strong>{{ order.transaction_ref }}</strong></p>{% endif %}
+            <p>Fulfillment Status: {{ order.status|capitalize }}</p>
+        </div>
+    </div>
+    <div class="success-actions-bar no-print">
+        <button type="button" onclick="window.print()" class="btn-print-receipt">Print Official Invoice</button>
+        <a href="/store/{{ store_slug }}" class="btn-back-to-store">Continue Shopping</a>
+    </div>
+</div>
+</div></main>
+{% endblock %}

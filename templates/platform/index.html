@@ -1,0 +1,230 @@
+{% extends "platform/base.html" %}
+{% block title %}Modern E-Commerce Platform | Metohub{% endblock %}
+{% block content %}
+<style>
+.store-stack-container {
+    position: relative;
+    width: 260px;
+    height: 180px;
+    margin: 0 auto 30px auto;
+    perspective: 1000px;
+}
+@media (max-width: 600px) {
+    .store-stack-container {
+        width: 220px;
+        height: 150px;
+        margin-bottom: 20px;
+    }
+}
+.store-stack-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    pointer-events: none;
+    border: 3px solid #fff;
+}
+.store-stack-card.card-hidden {
+    opacity: 0;
+    transform: translateX(0) scale(0.8);
+    z-index: 1;
+}
+.store-stack-card.card-prev {
+    opacity: 0.7;
+    transform: translateX(-40px) scale(0.85) rotate(-5deg);
+    z-index: 2;
+}
+.store-stack-card.card-current {
+    opacity: 1;
+    transform: translateX(0) scale(1) rotate(0deg);
+    z-index: 4;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+}
+.store-stack-card.card-next {
+    opacity: 0.7;
+    transform: translateX(40px) scale(0.85) rotate(5deg);
+    z-index: 3;
+}
+</style>
+<section style="padding: 90px 0 60px; text-align: center;">
+    <div class="container" style="max-width: 920px;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 9999px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; font-size: 0.85rem; font-weight: 600; margin-bottom: 24px;">
+            <span>⚡</span> One Platform. Unlimited Independent Online Stores.
+        </div>
+        
+        <div class="store-stack-container" id="storeStack">
+            <div class="store-stack-card card-current" style="background-image: url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=400&q=80')"></div>
+            <div class="store-stack-card card-next" style="background-image: url('https://images.unsplash.com/photo-1555529771-835f59bfc50c?auto=format&fit=crop&w=400&q=80')"></div>
+            <div class="store-stack-card card-hidden" style="background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=400&q=80')"></div>
+            <div class="store-stack-card card-hidden" style="background-image: url('https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=400&q=80')"></div>
+            <div class="store-stack-card card-hidden" style="background-image: url('https://images.unsplash.com/photo-1593998066526-65fcab3021a2?auto=format&fit=crop&w=400&q=80')"></div>
+            <div class="store-stack-card card-hidden" style="background-image: url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400&q=80')"></div>
+            <div class="store-stack-card card-hidden" style="background-image: url('https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?auto=format&fit=crop&w=400&q=80')"></div>
+            <div class="store-stack-card card-hidden" style="background-image: url('https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=400&q=80')"></div>
+            <div class="store-stack-card card-prev" style="background-image: url('https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?auto=format&fit=crop&w=400&q=80')"></div>
+        </div>
+
+        <h1 style="font-family: 'Outfit', sans-serif; font-size: 3.4rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 20px;">
+            Create Your Online Store in <span class="brand-badge">60 Seconds</span>
+        </h1>
+        <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 740px; margin: 0 auto 36px; line-height: 1.6;">
+            Whether you rent bridal jewellery, sell mobile accessories, or curate luxury fragrances—Metohub gives you a branded, lightning-fast storefront and seamless order management.
+        </p>
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+            <a href="/register" class="btn btn-primary btn-lg"><span>🚀</span> Start Your Store Free</a>
+            <a href="#stores" class="btn btn-secondary btn-lg"><span>🏬</span> Explore Live Demo Stores</a>
+        </div>
+    </div>
+</section>
+
+<section id="stores" style="padding: 70px 0; border-top: 1px solid var(--card-border);">
+    <div class="container">
+        <div style="text-align: center; max-width: 680px; margin: 0 auto 50px;">
+            <span class="badge badge-gold" style="margin-bottom: 12px;">Live Stores</span>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 700;">Businesses Thriving on Metohub</h2>
+            <p style="color: var(--text-secondary);">Each merchant gets an independent branded storefront with their unique inventory, currency, and business logic.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 28px;">
+            {% for row in stores %}
+            {% set s = row.tenant %}
+            {% set badgeClass = 'badge-blue' %}
+            {% if s.business_type == 'Rental Jewellery' %}{% set badgeClass = 'badge-gold' %}{% endif %}
+            {% if s.business_type == 'Perfumes & Fragrances' %}{% set badgeClass = 'badge-purple' %}{% endif %}
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            {% if s.logo or s.logo_webp %}
+                            <img src="/{{ s.logo_webp or s.logo }}" alt="{{ s.name }}" style="width: 54px; height: 54px; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border);">
+                            {% else %}
+                            <div style="width:54px;height:54px;border-radius:12px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;">🛍️</div>
+                            {% endif %}
+                            <div>
+                                <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700;">{{ s.name }}</h3>
+                                <span class="badge {{ badgeClass }}" style="margin-top: 2px;">{{ s.business_type }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.94rem; margin-bottom: 20px; line-height: 1.55;">{{ s.tagline or s.description or '' }}</p>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(255,255,255,0.03); border-radius: var(--radius-md); margin-bottom: 16px; font-size: 0.85rem;">
+                        <span style="color: var(--text-muted);">Active Catalog:</span>
+                        <span style="font-weight: 600; color: #fff;">{{ row.product_count }} Products</span>
+                        <span style="color: var(--text-muted);">Currency:</span>
+                        <span style="font-weight: 600; color: #fff;">{{ s.currency_symbol or s.currency }} {{ s.currency }}</span>
+                    </div>
+                    <a href="/store/{{ s.slug }}" class="btn btn-primary" style="width: 100%;"><span>🛍️</span> Visit {{ s.name }} Storefront →</a>
+                </div>
+            </div>
+            {% else %}
+            <div class="card" style="grid-column: 1 / -1; text-align:center;">
+                <p style="color: var(--text-secondary);">No live stores yet. <a href="/register">Create the first one</a>.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section id="plans" style="padding: 70px 0; border-top: 1px solid var(--card-border); background: rgba(15, 23, 42, 0.4);">
+    <div class="container">
+        <div style="text-align: center; max-width: 720px; margin: 0 auto 50px;">
+            <span class="badge badge-emerald" style="margin-bottom: 12px;">Simple, Transparent Pricing</span>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 700;">Choose Your Merchant Plan</h2>
+            <p style="color: var(--text-secondary);">Select the ideal plan for your brand. 3 months free trial available on all three plans—launch your store with zero risk.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; max-width: 1140px; margin: 0 auto;">
+            {% for card in plans %}
+            {% set p = card.plan %}
+            {% set isPro = p.slug == 'pro' %}
+            {% set isEssential = p.slug == 'essential' %}
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; position: relative; {% if isPro %}border-color: rgba(99, 102, 241, 0.6); box-shadow: var(--glow-primary);{% elif isEssential %}border-color: rgba(56, 189, 248, 0.4);{% endif %}">
+                {% if isPro %}
+                <div style="position: absolute; top: -14px; right: 24px; background: var(--primary-gradient); color: #fff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 12px; border-radius: 9999px;">Most Popular</div>
+                {% elif isEssential %}
+                <div style="position: absolute; top: -14px; right: 24px; background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 12px; border-radius: 9999px;">Growth Tier</div>
+                {% else %}
+                <div style="position: absolute; top: -14px; right: 24px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 12px; border-radius: 9999px;">Starter Choice</div>
+                {% endif %}
+                <div>
+                    <div style="margin-bottom: 18px;">
+                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700;">{{ p.name }} Plan</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 4px; min-height: 42px; line-height: 1.5;">{{ p.description }}</p>
+                    </div>
+                    <div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--card-border);">
+                        <div style="display: flex; align-items: baseline; gap: 6px;">
+                            <span style="font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: #fff;">₹{{ p.price_weekly|money0 }}</span>
+                            <span style="color: var(--text-muted); font-size: 0.95rem; font-weight: 600;">/ week</span>
+                        </div>
+                        <div style="margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: #34d399; font-weight: 600; background: rgba(16, 185, 129, 0.12); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.28);">
+                            <span>🎁</span> 3 Months Free Trial Available
+                        </div>
+                    </div>
+                    <div style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); margin-bottom: 14px;">Included Features:</div>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 11px; margin-bottom: 30px; font-size: 0.9rem; color: var(--text-secondary);">
+                        {% for feat in card.features %}
+                        <li style="display: flex; align-items: center; gap: 10px;"><span style="color: var(--accent-emerald); font-weight: bold;">✓</span><span>{{ feat }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <a href="/register?plan={{ p.slug }}" class="btn {% if isPro or isEssential %}btn-primary{% else %}btn-secondary{% endif %}" style="width: 100%;">Select {{ p.name }} &amp; Start Store</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section id="features" style="padding: 70px 0; border-top: 1px solid var(--card-border);">
+    <div class="container">
+        <div style="text-align: center; max-width: 680px; margin: 0 auto 50px;">
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 700;">Built for Speed, Security &amp; Scale</h2>
+            <p style="color: var(--text-secondary);">FastAPI architecture engineered with production-ready security standards.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            <div class="card"><div style="font-size: 2rem; margin-bottom: 12px;">🛡️</div><h4 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 600; margin-bottom: 8px;">Store Isolation</h4><p style="color: var(--text-secondary); font-size: 0.9rem;">Every seller's products, orders, and customer databases are strictly isolated by unique IDs.</p></div>
+            <div class="card"><div style="font-size: 2rem; margin-bottom: 12px;">💍</div><h4 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 600; margin-bottom: 8px;">Rental &amp; Retail Support</h4><p style="color: var(--text-secondary); font-size: 0.9rem;">Native support for rental pricing (per day, per weekend) with date pickers, as well as classic retail purchases.</p></div>
+            <div class="card"><div style="font-size: 2rem; margin-bottom: 12px;">🔒</div><h4 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 600; margin-bottom: 8px;">FastAPI Security</h4><p style="color: var(--text-secondary); font-size: 0.9rem;">SQLAlchemy parameterized queries, CSRF tokens on mutating requests, XSS escaping, and secure session cookies.</p></div>
+        </div>
+    </div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stackContainer = document.getElementById('storeStack');
+    if (!stackContainer) return;
+
+    const cards = stackContainer.querySelectorAll('.store-stack-card');
+    let currentIndex = 0;
+    const totalCards = cards.length;
+
+    setInterval(() => {
+        // Remove classes
+        cards.forEach(card => {
+            card.classList.remove('card-prev', 'card-current', 'card-next');
+            card.classList.add('card-hidden');
+        });
+
+        // Update index
+        currentIndex = (currentIndex + 1) % totalCards;
+        
+        const prevIndex = (currentIndex - 1 + totalCards) % totalCards;
+        const nextIndex = (currentIndex + 1) % totalCards;
+
+        cards[prevIndex].classList.remove('card-hidden');
+        cards[prevIndex].classList.add('card-prev');
+
+        cards[currentIndex].classList.remove('card-hidden');
+        cards[currentIndex].classList.add('card-current');
+
+        cards[nextIndex].classList.remove('card-hidden');
+        cards[nextIndex].classList.add('card-next');
+    }, 1500);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends "store/base.html" %}
+{% block header_center %}
+<form action="/store/{{ store_slug }}" method="GET" class="store-search-form" style="flex:1; max-width:460px;">
+    {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
+    <div class="search-input-wrap" style="position:relative; display:flex; align-items:center;">
+        <i class="fas fa-search search-icon" style="position:absolute; left:14px; color:var(--store-muted);"></i>
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Search {{ tenant.name }}..." class="search-input" style="width:100%; background:var(--store-input-bg); border:1px solid var(--store-input-border); border-radius:30px; padding:0.65rem 2.2rem 0.65rem 2.4rem; color:var(--store-text);">
+    </div>
+</form>
+{% endblock %}
+{% block body %}
+<style>
+    .store-hero-slider {
+        position: relative;
+        overflow: hidden;
+        min-height: 280px;
+        border-bottom: 1px solid var(--store-border);
+    }
+    .store-hero-slides {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+        height: 100%;
+        min-height: 280px;
+    }
+    .store-hero-slide {
+        min-width: 100%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .store-hero-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .store-hero-arrow:hover { background: rgba(0,0,0,0.8); }
+    .store-hero-arrow.prev { left: 20px; }
+    .store-hero-arrow.next { right: 20px; }
+</style>
+
+<div class="store-hero-slider" id="heroSlider">
+    <div class="store-hero-slides" id="heroSlides">
+        
+        {% if not tenant.hide_default_banner %}
+        <!-- Default Text Banner Slide -->
+        <div class="store-hero-slide" style="padding:4.5rem 0 3.5rem;">
+            <div class="store-hero-bg" style="position:absolute; inset:0; z-index:1;">
+                <div class="hero-overlay" style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,23,42,0.5), rgba(15,23,42,0.85)); z-index:2;"></div>
+            </div>
+            <div class="container store-hero-content" style="position:relative; z-index:3;">
+                <span class="store-hero-pill">Welcome to our official store</span>
+                <h1 class="store-hero-title">{{ tenant.name }}</h1>
+                <p class="store-hero-desc">{{ tenant.description or 'Browse curated items with instant fast checkout and verified product quality.' }}</p>
+                <div class="store-stats-pills">
+                    <div class="stat-pill">{{ total_products }} Products Available</div>
+                    <div class="stat-pill">100% Authentic Guarantee</div>
+                    <div class="stat-pill">Fast Delivery</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% for b in tenant.banners %}
+        <!-- Image Banner Slide -->
+        <div class="store-hero-slide">
+            <img src="/{{ b.image_path }}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1;">
+            <div class="hero-overlay" style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,23,42,0.2), rgba(15,23,42,0.6)); z-index:2;"></div>
+        </div>
+        {% endfor %}
+        
+    </div>
+    
+    <button class="store-hero-arrow prev" onclick="moveSlide(-1)">&#10094;</button>
+    <button class="store-hero-arrow next" onclick="moveSlide(1)">&#10095;</button>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.store-hero-slide');
+    const totalSlides = slides.length;
+    const slidesContainer = document.getElementById('heroSlides');
+
+    if (totalSlides <= 1) {
+        document.querySelectorAll('.store-hero-arrow').forEach(btn => btn.style.display = 'none');
+    }
+
+    function moveSlide(direction) {
+        if (totalSlides <= 1) return;
+        currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+        updateSlider();
+    }
+
+    function updateSlider() {
+        slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
+
+    if (totalSlides > 1) {
+        setInterval(() => {
+            moveSlide(1);
+        }, 2000); // 2 second automatic loop
+    }
+</script>
+<main class="store-catalog-section">
+    <div class="container">
+        <div class="catalog-filter-bar">
+            <div class="categories-scroll-wrapper">
+                <a href="/store/{{ store_slug }}" class="cat-pill {% if not category_filter and not rental_filter %}active{% endif %}">All Products</a>
+                <a href="/store/{{ store_slug }}?type=rental" class="cat-pill {% if rental_filter == 'rental' %}active{% endif %}">For Rent</a>
+                <a href="/store/{{ store_slug }}?type=retail" class="cat-pill {% if rental_filter == 'retail' %}active{% endif %}">For Sale</a>
+                {% for cat in categories %}
+                <a href="/store/{{ store_slug }}?category={{ cat.slug }}" class="cat-pill {% if category_filter == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+                {% endfor %}
+            </div>
+            <form method="GET" action="/store/{{ store_slug }}" id="sortForm" style="display:flex; gap:0.5rem;">
+                {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
+                {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+                {% if rental_filter %}<input type="hidden" name="type" value="{{ rental_filter }}">{% endif %}
+                <input type="hidden" name="limit" value="{{ per_page }}">
+                <select name="sort" onchange="document.getElementById('sortForm').submit()" class="sort-select">
+                    <option value="newest" {% if sort_by=='newest' %}selected{% endif %}>Newest Arrivals</option>
+                    <option value="price_asc" {% if sort_by=='price_asc' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_desc" {% if sort_by=='price_desc' %}selected{% endif %}>Price: High to Low</option>
+                    <option value="popular" {% if sort_by=='popular' %}selected{% endif %}>Most Popular</option>
+                </select>
+            </form>
+        </div>
+        {% if not products %}
+        <div class="empty-products-box">
+            <h3>No products found</h3>
+            <p>Try adjusting your search or filters.</p>
+            <a href="/store/{{ store_slug }}" class="btn btn-primary">Browse All Products</a>
+        </div>
+        {% else %}
+        <div class="products-grid">
+            {% for prod in products %}
+            <div class="product-card">
+                <div class="product-thumb-wrap">
+                    {% if prod.is_rental %}<span class="badge-rental">Available for Rent</span>{% endif %}
+                    {% if prod.stock_quantity <= 0 %}<span class="badge-stock out">Out of Stock</span>{% endif %}
+                    <a href="/store/{{ store_slug }}/product/{{ prod.id }}" class="product-thumb-link">
+                        {% if prod.primary_image %}
+                        <img src="/{{ prod.primary_image }}" alt="{{ prod.name }}" class="product-img" loading="lazy">
+                        {% else %}
+                        <div class="product-img-fallback"><i class="fas fa-gem"></i></div>
+                        {% endif %}
+                    </a>
+                </div>
+                <div class="product-info-wrap">
+                    <h3 class="product-title"><a href="/store/{{ store_slug }}/product/{{ prod.id }}">{{ prod.name }}</a></h3>
+                    <div class="product-pricing-box">
+                        {% if prod.is_rental %}
+                        <strong>{{ currency }}{{ prod.rental_price_daily|money }}</strong> <small>/ day</small>
+                        {% else %}
+                        <span class="price-current">{{ currency }}{{ prod.price|money }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="product-card-footer">
+                        <a href="/store/{{ store_slug }}/product/{{ prod.id }}" class="btn-add-store {% if prod.is_rental %}btn-rent{% else %}btn-buy{% endif %}">
+                            {% if prod.is_rental %}Rent Now{% else %}Buy Now{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if total_pages > 1 or total_products > 12 %}
+        <div class="catalog-pagination-wrap">
+            <div class="pagination-info">Showing <strong>{{ from_item }}</strong>–<strong>{{ to_item }}</strong> of <strong>{{ total_products }}</strong></div>
+            {% if total_pages > 1 %}
+            <nav class="pagination-nav">
+                {% if current_page > 1 %}<a href="?page={{ current_page-1 }}&limit={{ per_page }}&sort={{ sort_by }}{% if q %}&q={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if rental_filter %}&type={{ rental_filter }}{% endif %}" class="page-btn">Prev</a>{% endif %}
+                {% for p_item in page_items %}
+                    {% if p_item == '...' %}<span class="page-dots">…</span>
+                    {% else %}<a href="?page={{ p_item }}&limit={{ per_page }}&sort={{ sort_by }}{% if search_query %}&q={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if rental_filter %}&type={{ rental_filter }}{% endif %}" class="page-btn {% if p_item == current_page %}active{% endif %}">{{ p_item }}</a>{% endif %}
+                {% endfor %}
+            </nav>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

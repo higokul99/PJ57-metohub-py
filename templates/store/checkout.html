@@ -1,0 +1,111 @@
+{% extends "store/base.html" %}
+{% block title %}Checkout — {{ tenant.name }}{% endblock %}
+{% block header_tag %}Secure Checkout{% endblock %}
+{% block header_actions %}
+<a href="/store/{{ store_slug }}/cart" class="btn-store-nav">Edit Cart</a>
+{% endblock %}
+{% block extra_css %}.checkout-form-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem; align-items: start; }{% endblock %}
+{% block body %}
+<main class="checkout-page-section"><div class="container">
+<div class="checkout-title-bar"><h1>Complete Your Order</h1><p>Provide your delivery and contact details to finalize your reservation or purchase.</p></div>
+{% if error %}<div class="alert alert-danger" style="margin-bottom:2rem;">{{ error }}</div>{% endif %}
+<form action="/store/{{ store_slug }}/checkout" method="POST" enctype="multipart/form-data" class="checkout-form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="checkout-main-col">
+        <div class="checkout-card">
+            <h2 class="card-heading">Customer Contact</h2>
+            <div class="form-row-2">
+                <div class="form-group"><label>Full Name *</label><input type="text" name="customer_name" required class="form-control" value="{{ form.customer_name or '' }}"></div>
+                <div class="form-group"><label>Email Address *</label><input type="email" name="customer_email" required class="form-control" value="{{ form.customer_email or '' }}"></div>
+            </div>
+            <div class="form-group"><label>Phone / WhatsApp *</label><input type="tel" name="customer_phone" required class="form-control" value="{{ form.customer_phone or '' }}"></div>
+        </div>
+        <div class="checkout-card">
+            <h2 class="card-heading">Delivery Address</h2>
+            <div class="form-group"><label>Street Address *</label><input type="text" name="shipping_address" required class="form-control" value="{{ form.shipping_address or '' }}"></div>
+            <div class="form-row-2">
+                <div class="form-group"><label>City / State *</label><input type="text" name="city" required class="form-control" value="{{ form.city or '' }}"></div>
+                <div class="form-group"><label>Postal Code *</label><input type="text" name="postal_code" required class="form-control" value="{{ form.postal_code or '' }}"></div>
+            </div>
+            <div class="form-group"><label>Notes (Optional)</label><textarea name="notes" rows="2" class="form-control">{{ form.notes or '' }}</textarea></div>
+        </div>
+        <div class="checkout-card">
+            <h2 class="card-heading">Payment Method</h2>
+            <div class="payment-method-selector">
+                {% if tenant.enable_upi %}
+                <label class="pay-method-card {% if selected_method=='upi' %}active{% endif %}" id="label_pay_upi">
+                    <input type="radio" name="payment_method" value="upi" {% if selected_method=='upi' %}checked{% endif %} onchange="onPaymentMethodChange('upi')">
+                    <div class="method-info"><span class="method-name">Instant UPI / QR Scan & Pay</span><span class="method-sub">Scan QR using PhonePe, Google Pay, Paytm</span></div>
+                </label>
+                <div id="upi_details_box" class="upi-payment-box" style="{% if selected_method!='upi' %}display:none;{% endif %}">
+                    <div class="upi-qr-display-wrap">
+                        <div class="upi-qr-frame">{% if tenant.upi_qr_image %}<img src="/{{ tenant.upi_qr_image }}" class="upi-qr-img" alt="UPI QR">{% else %}<div style="padding:2rem;text-align:center;">Scan with UPI</div>{% endif %}</div>
+                        <div class="upi-info-col">
+                            <div>Merchant UPI ID</div>
+                            <div class="upi-id-badge"><span id="upiIdText">{{ tenant.upi_id or 'merchant@upi' }}</span>
+                                <button type="button" class="btn-copy-upi" onclick="copyUpiId()">Copy</button>
+                            </div>
+                            <div>Pay Exact Amount: <strong>{{ currency }}{{ subtotal|money }}</strong></div>
+                        </div>
+                    </div>
+                    <div class="upi-proof-upload-zone">
+                        <div class="form-group"><label>UPI Transaction Ref / UTR *</label><input type="text" name="transaction_ref" id="transaction_ref" class="form-control" value="{{ form.transaction_ref or '' }}" {% if selected_method=='upi' %}required{% endif %}></div>
+                        <div class="form-group"><label>Upload Payment Screenshot *</label><input type="file" name="payment_proof" id="payment_proof" accept="image/*" class="form-control" {% if selected_method=='upi' %}required{% endif %}></div>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="pay-method-card disabled"><input type="radio" name="payment_method" value="cod" disabled><div class="method-info"><span class="method-name">Cash on Delivery</span><span class="method-sub">Frozen / Unavailable</span></div></div>
+                {% if tenant.enable_bank %}
+                <label class="pay-method-card {% if selected_method=='bank_transfer' %}active{% endif %}" id="label_pay_bank_transfer">
+                    <input type="radio" name="payment_method" value="bank_transfer" {% if selected_method=='bank_transfer' %}checked{% endif %} onchange="onPaymentMethodChange('bank_transfer')">
+                    <div class="method-info"><span class="method-name">Direct Bank Wire / NEFT / IMPS</span></div>
+                </label>
+                {% if tenant.bank_details %}<div id="bank_details_box" style="{% if selected_method!='bank_transfer' %}display:none;{% endif %} white-space:pre-wrap; padding:1rem;">{{ tenant.bank_details }}</div>{% endif %}
+                {% endif %}
+                <div class="pay-method-card disabled"><input type="radio" disabled><div class="method-info"><span class="method-name">Credit / Debit Card</span><span class="method-sub">Coming Soon</span></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="checkout-sidebar-col">
+        <div class="checkout-summary-card">
+            <h3 class="summary-heading">Order Review</h3>
+            <div class="review-items-list">
+                {% for key, item in items.items() %}
+                <div class="review-item">
+                    <div class="review-info"><div class="review-name">{{ item.name }}</div><div class="review-meta">{{ item.spec_text }} • Qty {{ item.qty }}</div></div>
+                    <div class="review-price">{{ currency }}{{ item.line_total|money }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="review-calc">
+                <div class="calc-row"><span>Subtotal</span><span>{{ currency }}{{ subtotal|money }}</span></div>
+                <div class="calc-row total"><span>Total Amount</span><span class="total-value">{{ currency }}{{ subtotal|money }}</span></div>
+            </div>
+            <button type="submit" class="btn-place-order">Authorize & Place Order</button>
+        </div>
+    </div>
+</form>
+</div></main>
+{% endblock %}
+{% block scripts %}
+<script>
+function onPaymentMethodChange(method) {
+    document.querySelectorAll('.pay-method-card').forEach(card => { if (!card.classList.contains('disabled')) card.classList.remove('active'); });
+    document.getElementById('label_pay_' + method)?.classList.add('active');
+    const upiBox = document.getElementById('upi_details_box');
+    if (upiBox) {
+        upiBox.style.display = method === 'upi' ? 'block' : 'none';
+        const txn = document.getElementById('transaction_ref');
+        const proof = document.getElementById('payment_proof');
+        if (txn) txn.required = method === 'upi';
+        if (proof) proof.required = method === 'upi';
+    }
+    const bankBox = document.getElementById('bank_details_box');
+    if (bankBox) bankBox.style.display = method === 'bank_transfer' ? 'block' : 'none';
+}
+function copyUpiId() {
+    const t = document.getElementById('upiIdText')?.innerText?.trim() || '';
+    navigator.clipboard.writeText(t);
+}
+</script>
+{% endblock %}

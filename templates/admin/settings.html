@@ -1,0 +1,126 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="admin-card" style="max-width:960px;margin:0 auto;">
+    <div class="card-header-bar">
+        <div><h2>Store Branding & Theme Customizer</h2></div>
+        <a href="/store/{{ current_tenant.slug }}" target="_blank" class="btn btn-secondary">View Live Storefront</a>
+    </div>
+    {% if error %}<div class="admin-alert danger">{{ error }}</div>{% endif %}
+    {% if success %}<div class="admin-alert success auto-dismiss">{{ success }}</div>{% endif %}
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="admin-card" style="background:rgba(0,0,0,0.2);">
+            <h3 style="color:#fff;">Store Identity</h3>
+            <div class="form-grid-2">
+                <div class="admin-form-group"><label>Store Name *</label><input type="text" name="name" required class="admin-input" value="{{ current_tenant.name }}"></div>
+                <div class="admin-form-group"><label>Tagline</label><input type="text" name="tagline" class="admin-input" value="{{ current_tenant.tagline or '' }}"></div>
+            </div>
+            <div class="form-grid-2">
+                <div class="admin-form-group"><label>Currency</label>
+                    <select name="currency" class="admin-select" style="background: rgba(255,255,255,0.05); cursor: not-allowed; opacity: 0.8;">
+                        <option value="₹" selected>₹ (INR) - Fixed</option>
+                    </select>
+                </div>
+                <div class="admin-form-group"><label>Description</label><textarea name="description" rows="2" class="admin-textarea">{{ current_tenant.description or '' }}</textarea></div>
+            </div>
+        </div>
+        <div class="admin-card" style="background:rgba(0,0,0,0.25);">
+            <h3 style="color:#fff;"><i class="fas fa-palette"></i> Color Customization</h3>
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('neutral_white')">Neutral White</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('pure_monochrome')">Monochrome</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('warm_ivory')">Ivory Warm</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('modern_platinum')">Platinum</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="applyThemePreset('midnight_slate')">Midnight</button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem;">
+                {% for key, label in [
+                    ('bg_color','Page Background'),('card_bg','Card Surface'),('card_border','Card Border'),
+                    ('header_bg','Header Background'),('header_text','Header Text'),
+                    ('text_color','Main Text'),('text_muted','Muted Text'),
+                    ('primary_color','Primary Button'),('primary_hover','Button Hover'),('primary_text','Button Text'),
+                    ('accent_color','Accent'),('border_color','Dividers'),
+                    ('footer_bg','Footer Background'),('footer_text','Footer Text'),
+                    ('input_bg','Input Background'),('input_border','Input Border')
+                ] %}
+                <div class="admin-form-group">
+                    <label style="font-size:0.8rem;">{{ label }}</label>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <input type="color" id="theme_{{ key }}_picker" value="{{ theme[key] if theme[key][:1]=='#' else '#ffffff' }}" style="width:44px;height:36px;" oninput="syncColorField('{{ key }}', this.value)">
+                        <input type="text" id="theme_{{ key }}" name="theme_{{ key }}" class="admin-input" value="{{ theme[key] }}" oninput="syncColorPicker('{{ key }}', this.value)">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="admin-card" style="background:rgba(0,0,0,0.2);">
+            <h3 style="color:#fff;">Visual Assets</h3>
+            <div class="form-grid-2">
+                <div><label>Store Logo</label>{% if current_tenant.logo %}<img src="/{{ current_tenant.logo }}" style="width:60px;height:60px;border-radius:12px;object-fit:cover;display:block;margin:0.5rem 0;">{% endif %}<input type="file" name="store_logo" accept="image/*" class="admin-input"></div>
+                <div>
+                    <label>Store Banners ({{ banners|length }} / {{ banner_limit }})</label>
+                    <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom: 0.5rem;">Recommended dimensions: 1920x600px. Images will be cropped to fit.</p>
+                    
+                    {% if banner_limit > 0 %}
+                        <div class="admin-form-group" style="margin-bottom: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="hide_default_banner" {% if current_tenant.hide_default_banner %}checked{% endif %}>
+                                Hide Default Text Banner
+                            </label>
+                        </div>
+                    {% else %}
+                        <p style="font-size:0.8rem; color:var(--accent-red); margin-bottom: 1rem;">Your Base plan includes the default banner only. Upgrade to upload custom banners.</p>
+                    {% endif %}
+
+                    {% if banners %}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 1rem;">
+                        {% for b in banners %}
+                        <div style="position: relative;">
+                            <img src="/{{ b.image_path }}" style="width:100%;height:60px;object-fit:cover;border-radius:8px;display:block;">
+                            <label style="position: absolute; top: -5px; right: -5px; background: rgba(0,0,0,0.8); border-radius: 50%; padding: 2px 6px; cursor: pointer;">
+                                <input type="checkbox" name="delete_banner" value="{{ b.id }}"> <i class="fas fa-trash" style="color: red; font-size: 0.7rem;"></i>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if banner_limit > banners|length %}
+                    <input type="file" name="store_banners" accept="image/*" class="admin-input" multiple>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="admin-card" style="background:rgba(0,0,0,0.2);">
+            <h3 style="color:#fff;">Support Contact</h3>
+            <div class="form-grid-2">
+                <div class="admin-form-group"><label>Support Email</label><input type="email" name="contact_email" class="admin-input" value="{{ current_tenant.contact_email or '' }}"></div>
+                <div class="admin-form-group"><label>Phone</label><input type="text" name="contact_phone" class="admin-input" value="{{ current_tenant.contact_phone or '' }}"></div>
+            </div>
+        </div>
+        <div class="admin-card" style="background:rgba(0,0,0,0.2);">
+            <h3 style="color:#fff;">Owner Profile & Compliance</h3>
+            <div class="form-grid-2">
+                <div class="admin-form-group"><label>Address</label><textarea name="address" rows="2" class="admin-textarea">{{ user.address or '' }}</textarea></div>
+                <div class="admin-form-group"><label>National ID Number</label><input type="text" name="national_id_number" class="admin-input" value="{{ user.national_id_number or '' }}"></div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">Save Store Branding & Theme Colors</button>
+    </form>
+</div>
+<script>
+const themePresets = {{ presets|tojson }};
+function syncColorField(key, val) { const el = document.getElementById('theme_' + key); if (el) el.value = val; }
+function syncColorPicker(key, val) { const p = document.getElementById('theme_' + key + '_picker'); if (p && /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(val)) p.value = val; }
+function applyThemePreset(presetKey) {
+    const preset = themePresets[presetKey];
+    if (!preset) return;
+    for (const [key, val] of Object.entries(preset)) {
+        const picker = document.getElementById('theme_' + key + '_picker');
+        const textInput = document.getElementById('theme_' + key);
+        if (picker && val.startsWith('#')) picker.value = val;
+        if (textInput) textInput.value = val;
+    }
+}
+</script>
+{% endblock %}

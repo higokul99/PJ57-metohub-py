@@ -1,0 +1,35 @@
+{% extends "platform/base.html" %}
+{% block title %}Merchant Login | Metohub{% endblock %}
+{% block content %}
+<div class="auth-section">
+    <div class="container" style="max-width: 520px;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-badge">Merchant Portal</div>
+                <h2>Welcome Back</h2>
+                <p>Sign in to manage your independent store, inventory, and orders</p>
+            </div>
+            {% if error %}<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> <span>{{ error }}</span></div>{% endif %}
+            {% if registered %}<div class="alert alert-success"><i class="fas fa-check-circle"></i> <span>Your store has been created successfully! Please sign in below.</span></div>{% endif %}
+            {% if logged_out %}<div class="alert alert-success"><i class="fas fa-info-circle"></i> <span>You have been signed out securely.</span></div>{% endif %}
+            <form action="/login" method="POST" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Work Email</label>
+                    <input type="email" id="email" name="email" value="{{ email }}" placeholder="you@yourdomain.com" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="password" name="password" required class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem;">Sign In to Dashboard <i class="fas fa-arrow-right"></i></button>
+            </form>
+
+            <div class="auth-footer" style="margin-top: 1.5rem; text-align: center;">
+                <p style="color: var(--text-muted);">Don't have an online store yet? <a href="/register" style="color: var(--primary); font-weight: 600;">Launch Your Store Free</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

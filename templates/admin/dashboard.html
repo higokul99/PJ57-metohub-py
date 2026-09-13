@@ -1,0 +1,63 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="admin-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(56, 189, 248, 0.05)); border-color: rgba(99, 102, 241, 0.3);">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+            <span class="webp-tag"><i class="fas fa-bolt"></i> Your simple e-commerce store</span>
+            <h2 style="font-size:1.6rem; font-weight:800; margin:0.4rem 0 0; color:#fff;">{{ current_tenant.name }}</h2>
+            <p style="margin:0.3rem 0 0; color: var(--admin-text-muted);">{{ current_tenant.tagline or 'Multi-tenant store live and accepting online orders & rentals.' }}</p>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.25rem;">
+            {% if in_trial %}
+            <div style="font-size:0.85rem; color:var(--admin-text-muted);">
+                Trial: <strong style="color:#fff;">{{ trial_start }}</strong> to <strong style="color:#fff;">{{ trial_end }}</strong>
+            </div>
+            <div style="font-size:0.8rem; color:#34d399;">
+                {{ days_left }} days left in trial
+            </div>
+            <div style="font-size:0.75rem; color:var(--admin-text-muted); margin-top: 0.2rem;">
+                Subscription starts on {{ sub_start }}
+            </div>
+            {% else %}
+            <div style="font-size:0.85rem; color:var(--admin-text-muted);">
+                Subscription: <strong style="color:#fff;">{{ sub_start }}</strong> to <strong style="color:#fff;">{{ sub_end }}</strong>
+            </div>
+            <div style="font-size:0.8rem; color:#34d399;">
+                {{ days_left }} days left
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="metrics-grid">
+    <div class="metric-card"><div class="metric-icon-box revenue"><i class="fas fa-hand-holding-dollar"></i></div><div class="metric-info"><h3 style="font-weight: 500;">Total Sales</h3><p class="metric-value" style="font-size: 1.25rem; font-weight: 600;">{{ currency }}{{ total_revenue|money }}</p></div></div>
+    <div class="metric-card"><div class="metric-icon-box orders"><i class="fas fa-box-open"></i></div><div class="metric-info"><h3 style="font-weight: 500;">Total Orders</h3><p class="metric-value" style="font-size: 1.25rem; font-weight: 600;">{{ total_orders }}</p></div></div>
+    <div class="metric-card"><div class="metric-icon-box products"><i class="fas fa-tags"></i></div><div class="metric-info"><h3 style="font-weight: 500;">Active Products</h3><p class="metric-value" style="font-size: 1.25rem; font-weight: 600;">{{ active_products }}</p><span class="metric-sub">{{ remaining_products }} slots remaining</span></div></div>
+    <div class="metric-card"><div class="metric-icon-box views"><i class="fas fa-eye"></i></div><div class="metric-info"><h3 style="font-weight: 500;">Catalog Views</h3><p class="metric-value" style="font-size: 1.25rem; font-weight: 600;">{{ total_views }}</p></div></div>
+</div>
+
+<div class="admin-card">
+    <div class="card-header-bar"><div><h2>Recent Orders</h2></div><a href="/admin/orders" style="color: var(--admin-primary);">View All Orders</a></div>
+    {% if not recent_orders %}
+    <div style="text-align:center; padding:2.5rem; color: var(--admin-text-muted);"><p>No orders placed yet.</p></div>
+    {% else %}
+    <div class="table-responsive"><table class="admin-table">
+        <thead><tr><th>Order #</th><th>Customer</th><th>Date</th><th>Items</th><th>Total</th><th>Payment</th><th>Fulfillment</th><th></th></tr></thead>
+        <tbody>
+        {% for ord in recent_orders %}
+        <tr>
+            <td><strong style="color:#fff;">{{ ord.order_number }}</strong></td>
+            <td>{{ ord.customer_name }}<br><small style="color:var(--admin-text-muted);">{{ ord.customer_email }}</small></td>
+            <td>{{ ord.created_at.strftime('%b %d, %Y') if ord.created_at else '' }}</td>
+            <td>{{ ord.items|length }}</td>
+            <td><strong>{{ currency }}{{ ord.total_amount|money }}</strong></td>
+            <td><span class="badge-status {{ 'completed' if ord.payment_status=='paid' else 'pending' }}">{{ ord.payment_status|upper }}</span></td>
+            <td><span class="badge-status {{ ord.status }}">{{ ord.status|capitalize }}</span></td>
+            <td><a href="/admin/orders/{{ ord.id }}" class="btn-action-icon"><i class="fas fa-eye"></i></a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% endif %}
+</div>
+{% endblock %}

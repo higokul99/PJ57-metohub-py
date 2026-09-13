@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="form-grid-2" style="max-width:1000px;margin:0 auto;align-items:start;">
+    <div class="admin-card">
+        <h2 style="color:#fff;">Create Category</h2>
+        {% if error %}<div class="admin-alert danger">{{ error }}</div>{% endif %}
+        {% if success %}<div class="admin-alert success auto-dismiss">{{ success }}</div>{% endif %}
+        <form method="POST" action="/admin/categories">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="add_category" value="1">
+            <div class="admin-form-group"><label>Category Name *</label><input type="text" name="name" required class="admin-input"></div>
+            <button class="btn btn-primary" style="width:100%;" type="submit">Save Category</button>
+        </form>
+    </div>
+    <div class="admin-card">
+        <h2 style="color:#fff;">Store Categories</h2>
+        {% if not categories %}<p style="color:var(--admin-text-muted);">No categories created yet.</p>
+        {% else %}
+        <table class="admin-table">
+            <thead><tr><th>Name</th><th>Products</th><th></th></tr></thead>
+            <tbody>
+            {% for row in categories %}
+            <tr>
+                <td><strong style="color:#fff;">{{ row.cat.name }}</strong><div style="font-size:0.72rem;color:var(--admin-text-muted);">{{ row.cat.slug }}</div></td>
+                <td>{{ row.product_count }}</td>
+                <td>
+                    <form method="POST" action="/admin/categories" onsubmit="return confirm('Delete this category?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="delete_category" value="1">
+                        <input type="hidden" name="category_id" value="{{ row.cat.id }}">
+                        <button class="btn-action-icon delete" type="submit">🗑</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "store/base.html" %}
+{% block title %}{{ product.name }} — {{ tenant.name }}{% endblock %}
+{% block header_actions %}
+<a href="/store/{{ store_slug }}" class="btn-store-nav"><i class="fas fa-arrow-left"></i> Store Catalog</a>
+<a href="/store/{{ store_slug }}/cart" class="cart-trigger-btn"><i class="fas fa-shopping-bag"></i> Cart <span class="cart-badge-count">{{ cart_count }}</span></a>
+{% endblock %}
+{% block extra_css %}
+.product-detail-layout, .product-layout-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 3rem; align-items: start; }
+{% endblock %}
+{% block body %}
+<div class="product-breadcrumb-wrap"><div class="container"><nav class="breadcrumb-nav">
+    <a href="/store/{{ store_slug }}">{{ tenant.name }}</a><span class="sep">/</span>
+    {% if product.category %}<a href="/store/{{ store_slug }}?category={{ product.category.slug }}">{{ product.category.name }}</a><span class="sep">/</span>{% endif %}
+    <span class="current">{{ product.name }}</span>
+</nav></div></div>
+<main class="product-detail-section"><div class="container">
+<div class="product-layout-grid">
+    <div class="product-gallery-card">
+        <div class="main-image-viewport">
+            {% if images and images[0].image_path %}
+            <img src="/{{ images[0].image_path }}" id="mainProductImage" alt="{{ product.name }}" class="main-zoom-image">
+            {% else %}
+            <div class="product-img-fallback-large"><i class="fas fa-gem"></i></div>
+            {% endif %}
+            {% if product.is_rental %}<div class="floating-badge rental">Rental Available</div>{% endif %}
+        </div>
+        {% if images|length > 1 %}
+        <div class="thumbnail-strip">
+            {% for img in images %}
+            <button type="button" class="thumb-btn {% if loop.first %}active{% endif %}" onclick="switchImage('/{{ img.image_path }}', this)"><img src="/{{ img.image_path }}" alt=""></button>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="product-details-panel">
+        <div class="category-sku-row">
+            <span class="product-badge-cat">{{ product.category.name if product.category else 'Catalog Item' }}</span>
+            <span class="product-sku-pill">SKU: <strong>{{ product.sku }}</strong></span>
+        </div>
+        <h1 class="product-hero-title">{{ product.name }}</h1>
+        <div class="detail-price-box">
+            {% if product.is_rental %}
+            <div class="price-big"><span class="sym">{{ currency }}</span><span class="val" id="displayUnitPrice">{{ product.rental_price_daily|money }}</span><span class="period">/ day</span></div>
+            {% else %}
+            <div class="price-big"><span class="sym">{{ currency }}</span><span class="val">{{ product.price|money }}</span></div>
+            {% endif %}
+        </div>
+        <div class="stock-status-row">
+            {% if product.stock_quantity > 5 %}<span class="stock-pill in">In Stock ({{ product.stock_quantity }} available)</span>
+            {% elif product.stock_quantity > 0 %}<span class="stock-pill low">Only {{ product.stock_quantity }} left</span>
+            {% else %}<span class="stock-pill out">Currently Out of Stock</span>{% endif %}
+        </div>
+        <form action="/store/{{ store_slug }}/cart" method="POST" class="add-to-cart-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            {% if product.is_rental %}
+            <div class="rental-config-box">
+                <h4 class="config-title">Configure Rental Period</h4>
+                <div class="rental-option-grid">
+                    <label class="rental-type-card active" id="radioDailyCard"><input type="radio" name="rental_type" value="daily" checked onchange="updateRentalCalc()"><div class="card-inner"><span class="rt-title">Daily Rental</span><span class="rt-price">{{ currency }}{{ product.rental_price_daily|money }} / day</span></div></label>
+                    {% if product.rental_price_weekend > 0 %}
+                    <label class="rental-type-card" id="radioWeekendCard"><input type="radio" name="rental_type" value="weekend" onchange="updateRentalCalc()"><div class="card-inner"><span class="rt-title">Weekend Package</span><span class="rt-price">{{ currency }}{{ product.rental_price_weekend|money }} flat</span></div></label>
+                    {% endif %}
+                </div>
+                <div class="rental-dates-row" id="daysRow">
+                    <div class="form-group-rental"><label>Rental Duration (Days):</label>
+                        <select name="rental_days" id="rentalDays" class="form-control-rental" onchange="updateRentalCalc()">
+                            <option value="1">1 Day</option><option value="2">2 Days</option><option value="3">3 Days</option><option value="5">5 Days</option><option value="7">7 Days</option><option value="14">14 Days</option>
+                        </select>
+                    </div>
+                    <div class="form-group-rental"><label>Rental Start Date:</label>
+                        <input type="date" name="rental_start_date" id="rentalDate" class="form-control-rental" value="{{ tomorrow }}" min="{{ today }}">
+                    </div>
+                </div>
+                <div class="rental-total-estimate"><span>Estimated Rental Total:</span><span class="total-price" id="rentalTotalPreview">{{ currency }}{{ product.rental_price_daily|money }}</span></div>
+            </div>
+            {% else %}
+            <div class="quantity-picker-row">
+                <label>Quantity:</label>
+                <div class="qty-stepper">
+                    <button type="button" class="btn-qty" onclick="changeQty(-1)">-</button>
+                    <input type="number" name="quantity" id="qtyInput" value="1" min="1" max="{{ product.stock_quantity or 1 }}" class="qty-number">
+                    <button type="button" class="btn-qty" onclick="changeQty(1)">+</button>
+                </div>
+            </div>
+            {% endif %}
+            <div class="action-buttons-group">
+                <button type="submit" class="btn-detail-add" {% if product.stock_quantity <= 0 %}disabled{% endif %}>{% if product.is_rental %}Reserve Rental Now{% else %}Add to Cart{% endif %}</button>
+                <a href="/store/{{ store_slug }}/cart" class="btn-detail-view-cart">View Cart</a>
+            </div>
+        </form>
+        <div class="product-desc-section"><h3 class="desc-heading">About this Item</h3><div class="desc-body">{% if product.description %}{{ product.description|e|replace('\n', '<br>')|safe }}{% endif %}</div></div>
+    </div>
+</div>
+{% if related_products %}
+<div class="related-products-section">
+    <h2 class="section-title">More From {{ tenant.name }}</h2>
+    <div class="products-grid">
+        {% for rel in related_products %}
+        <div class="product-card">
+            <div class="product-thumb-wrap"><a href="/store/{{ store_slug }}/product/{{ rel.id }}">{% if rel.primary_image %}<img src="/{{ rel.primary_image }}" class="product-img">{% else %}<div class="product-img-fallback"></div>{% endif %}</a></div>
+            <div class="product-info-wrap">
+                <h3 class="product-title"><a href="/store/{{ store_slug }}/product/{{ rel.id }}">{{ rel.name }}</a></h3>
+                <strong>{{ currency }}{{ (rel.rental_price_daily if rel.is_rental else rel.price)|money }}</strong>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+</div></main>
+{% endblock %}
+{% block scripts %}
+<script>
+function switchImage(src, btn) {
+    document.getElementById('mainProductImage').src = src;
+    document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+function changeQty(delta) {
+    const input = document.getElementById('qtyInput');
+    if (!input) return;
+    let val = parseInt(input.value) || 1;
+    val += delta;
+    if (val >= parseInt(input.min) && val <= parseInt(input.max)) input.value = val;
+}
+const isRental = {{ 'true' if product.is_rental else 'false' }};
+const dailyPrice = {{ product.rental_price_daily or 0 }};
+const weekendPrice = {{ product.rental_price_weekend or 0 }};
+const currency = {{ currency|tojson }};
+function updateRentalCalc() {
+    if (!isRental) return;
+    const selectedType = document.querySelector('input[name="rental_type"]:checked')?.value || 'daily';
+    const days = parseInt(document.getElementById('rentalDays')?.value || 1);
+    const preview = document.getElementById('rentalTotalPreview');
+    const daysRow = document.getElementById('daysRow');
+    if (selectedType === 'daily') {
+        document.getElementById('radioDailyCard')?.classList.add('active');
+        document.getElementById('radioWeekendCard')?.classList.remove('active');
+        if (daysRow) daysRow.style.display = 'grid';
+        preview.innerText = currency + (dailyPrice * days).toFixed(2);
+    } else {
+        document.getElementById('radioDailyCard')?.classList.remove('active');
+        document.getElementById('radioWeekendCard')?.classList.add('active');
+        if (daysRow) daysRow.style.display = 'none';
+        preview.innerText = currency + weekendPrice.toFixed(2);
+    }
+}
+</script>
+{% endblock %}

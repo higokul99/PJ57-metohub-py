@@ -1,0 +1,9 @@
+{% extends "store/base.html" %}
+{% block title %}Product Not Found | {{ tenant.name }}{% endblock %}
+{% block body %}
+<div class="container" style="padding:100px 20px;text-align:center;">
+    <h1>Product Not Found</h1>
+    <p style="color:var(--store-muted);margin:1.5rem 0;">This product may have been unlisted or removed.</p>
+    <a href="/store/{{ store_slug }}" class="btn btn-primary">Back to {{ tenant.name }}</a>
+</div>
+{% endblock %}

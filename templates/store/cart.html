@@ -1,0 +1,53 @@
+{% extends "store/base.html" %}
+{% block title %}Shopping Cart — {{ tenant.name }}{% endblock %}
+{% block header_tag %}Shopping Cart{% endblock %}
+{% block header_actions %}
+<a href="/store/{{ store_slug }}" class="btn-store-nav">Continue Shopping</a>
+{% endblock %}
+{% block body %}
+<main class="cart-page-section"><div class="container">
+<div class="cart-header-title">
+    <h1>Your Cart ({{ items|length }} item{{ 's' if items|length != 1 else '' }})</h1>
+    {% if items %}<a href="/store/{{ store_slug }}/cart?action=clear" class="btn-cart-clear" onclick="return confirm('Clear cart?');">Clear Cart</a>{% endif %}
+</div>
+{% if added %}<div class="cart-alert success">Item successfully added to your cart!</div>{% endif %}
+{% if error %}<div class="cart-alert error">{{ error }}</div>{% endif %}
+{% if not items %}
+<div class="empty-cart-card">
+    <h2>Your cart is empty</h2>
+    <p>Looks like you haven't added anything from {{ tenant.name }} yet.</p>
+    <a href="/store/{{ store_slug }}" class="btn btn-primary btn-lg">Explore Store Catalog</a>
+</div>
+{% else %}
+<div class="cart-content-grid">
+    <div class="cart-items-card">
+        {% for key, item in items.items() %}
+        <div class="cart-item-row">
+            <div class="item-thumb-col">{% if item.image %}<img src="/{{ item.image }}" class="cart-item-img">{% else %}<div class="cart-item-img-fallback"></div>{% endif %}</div>
+            <div class="item-info-col">
+                <div class="item-type-tag {{ 'rental' if item.is_rental else 'retail' }}">{{ 'Rental' if item.is_rental else 'Purchase' }}</div>
+                <h3 class="item-name"><a href="/store/{{ store_slug }}/product/{{ item.product_id }}">{{ item.name }}</a></h3>
+                <div class="item-specs-text">{{ item.spec_text }}</div>
+            </div>
+            <div class="item-price-col"><span class="price-single">{{ currency }}{{ item.unit_price|money }}</span><span class="qty-badge">Qty: {{ item.qty }}</span></div>
+            <div class="item-total-col"><span class="line-total-amount">{{ currency }}{{ item.line_total|money }}</span></div>
+            <div class="item-remove-col"><a href="/store/{{ store_slug }}/cart?action=remove&key={{ key }}" class="btn-remove-item">✕</a></div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="cart-summary-card">
+        <h3 class="summary-title">Order Summary</h3>
+        <div class="summary-lines">
+            <div class="summary-line"><span>Subtotal</span><span>{{ currency }}{{ subtotal|money }}</span></div>
+            <div class="summary-line"><span>Shipping</span><span class="free-shipping-tag">FREE</span></div>
+            <div class="summary-line total-line"><span>Total Due</span><span>{{ currency }}{{ subtotal|money }}</span></div>
+        </div>
+        <div class="summary-actions">
+            <a href="/store/{{ store_slug }}/checkout" class="btn-proceed-checkout">Proceed to Checkout</a>
+            <a href="/store/{{ store_slug }}" class="btn-keep-browsing">Continue Shopping</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+</div></main>
+{% endblock %}

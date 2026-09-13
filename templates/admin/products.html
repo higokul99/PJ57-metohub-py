@@ -1,0 +1,65 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="admin-card" style="padding:1.25rem 1.5rem;">
+    <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+        <div><h2 style="margin:0;color:#fff;">Product Inventory</h2><span style="font-size:0.8rem;color:var(--admin-text-muted);">{{ total_filtered }} product(s) • Plan {{ product_count }} / {{ 'Unlimited' if is_plan_unlimited else product_limit }}</span></div>
+        {% if can_add_product %}<a href="/admin/products/add" class="btn btn-primary">Add New Product</a>
+        {% else %}<a href="/admin/settings" class="btn btn-primary" style="background-color: var(--accent-purple); border-color: var(--accent-purple);">Upgrade to Pro Plan</a>{% endif %}
+    </div>
+</div>
+{% if created %}<div class="admin-alert success auto-dismiss">Product created successfully!</div>{% endif %}
+{% if updated %}<div class="admin-alert success auto-dismiss">Product updated successfully!</div>{% endif %}
+{% if deleted %}<div class="admin-alert success auto-dismiss">Product removed from your catalog.</div>{% endif %}
+{% if error %}<div class="admin-alert danger">{{ error }}</div>{% endif %}
+<div class="admin-card" style="padding:1rem 1.5rem;">
+    <form method="GET" action="/admin/products" style="display:flex; gap:1rem; flex-wrap:wrap;">
+        <input type="text" name="q" value="{{ search }}" placeholder="Search products..." class="admin-input" style="flex:1; min-width:200px;">
+        <select name="type" class="admin-select"><option value="">All Types</option><option value="rental" {% if filter_type=='rental' %}selected{% endif %}>Rentals</option><option value="retail" {% if filter_type=='retail' %}selected{% endif %}>Retail</option></select>
+        <select name="category" class="admin-select"><option value="0">All Categories</option>{% for cat in categories %}<option value="{{ cat.id }}" {% if filter_category==cat.id %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}</select>
+        <button class="btn btn-secondary" type="submit">Apply Filters</button>
+    </form>
+</div>
+<div class="admin-card">
+{% if not products %}
+<div style="text-align:center;padding:3rem;color:var(--admin-text-muted);"><h3>No products found</h3></div>
+{% else %}
+<div class="table-responsive"><table class="admin-table">
+<thead><tr><th>Product</th><th>Type</th><th>Category</th><th>Pricing</th><th>Stock</th><th>Status</th><th>Views</th><th></th></tr></thead>
+<tbody>
+{% for prod in products %}
+<tr>
+    <td>
+        <div class="product-cell">
+            {% if prod.primary_image %}<img src="/{{ prod.primary_image }}" class="table-thumb" alt="">{% else %}<div class="thumb-fallback"></div>{% endif %}
+            <div><span class="product-name-txt">{{ prod.name }}</span><span class="sku-txt">SKU: {{ prod.sku }}</span></div>
+        </div>
+    </td>
+    <td>{% if prod.is_rental %}<span class="badge-type rental">Rental</span>{% else %}<span class="badge-type retail">Retail</span>{% endif %}</td>
+    <td>{{ prod.category.name if prod.category else 'Uncategorized' }}</td>
+    <td>{% if prod.is_rental %}{{ currency }}{{ prod.rental_price_daily|money }}/day{% else %}{{ currency }}{{ prod.price|money }}{% endif %}</td>
+    <td>{{ prod.stock_quantity }}</td>
+    <td><span class="badge-status {{ 'active' if prod.status=='active' else 'inactive' }}">{{ prod.status|capitalize }}</span></td>
+    <td>{{ prod.views_count }}</td>
+    <td>
+        <a href="/store/{{ current_tenant.slug }}/product/{{ prod.id }}" target="_blank" class="btn-action-icon">↗</a>
+        <a href="/admin/products/{{ prod.id }}/edit" class="btn-action-icon">✎</a>
+        <form action="/admin/products/{{ prod.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this product?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn-action-icon delete">🗑</button>
+        </form>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table></div>
+{% if total_pages > 1 %}
+<div class="admin-pagination-bar">
+    {% for p_item in page_items %}
+        {% if p_item == '...' %}<span>…</span>
+        {% else %}<a href="?page={{ p_item }}&per_page={{ per_page }}&q={{ search }}&type={{ filter_type }}&category={{ filter_category }}" class="admin-page-btn {% if p_item==page_num %}active{% endif %}">{{ p_item }}</a>{% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+</div>
+{% endblock %}

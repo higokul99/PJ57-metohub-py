@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="admin-card" style="max-width:960px;margin:0 auto;">
+    <div class="card-header-bar">
+        <div><h2>Store Payment Configuration</h2><p style="color:var(--admin-text-muted);">Control checkout methods for {{ current_tenant.name }}</p></div>
+    </div>
+    {% if success %}<div class="admin-alert success">{{ success }}</div>{% endif %}
+    {% if error %}<div class="admin-alert danger">{{ error }}</div>{% endif %}
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="admin-card" style="border:1px solid {% if current_tenant.enable_upi %}rgba(99,102,241,0.4){% else %}rgba(255,255,255,0.08){% endif %};">
+            <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                <div><h3 style="color:#fff;margin:0;">Direct UPI & QR Code Payment</h3><p style="color:var(--admin-text-muted);font-size:0.82rem;">Customer scans QR, then uploads screenshot.</p></div>
+                <label style="display:inline-flex;align-items:center;gap:0.6rem;"><input type="checkbox" name="enable_upi" value="1" {% if current_tenant.enable_upi %}checked{% endif %}> Enable UPI</label>
+            </div>
+            <div class="form-grid-2" style="margin-top:1rem;">
+                <div class="form-group"><label>Merchant UPI ID</label><input type="text" name="upi_id" class="form-control" value="{{ current_tenant.upi_id or '' }}" placeholder="business@okhdfcbank"></div>
+                <div class="form-group"><label>UPI QR Image</label>
+                    {% if current_tenant.upi_qr_image %}<img src="/{{ current_tenant.upi_qr_image }}" alt="QR" style="width:72px;height:72px;object-fit:contain;background:#fff;border-radius:8px;display:block;margin-bottom:0.5rem;">{% endif %}
+                    <input type="file" name="upi_qr_image" accept="image/*" class="form-control">
+                </div>
+            </div>
+        </div>
+        <div class="admin-card" style="opacity:0.75;"><h3 style="color:#cbd5e1;">Cash on Delivery — Frozen / Disabled</h3><input type="hidden" name="enable_cod" value="0"></div>
+        <div class="admin-card">
+            <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                <div><h3 style="color:#fff;margin:0;">Direct Bank Wire / NEFT / IMPS</h3></div>
+                <label><input type="checkbox" name="enable_bank" value="1" {% if current_tenant.enable_bank %}checked{% endif %}> Enable Bank</label>
+            </div>
+            <div class="form-group" style="margin-top:1rem;"><label>Bank Account Details</label><textarea name="bank_details" rows="3" class="form-control">{{ current_tenant.bank_details or '' }}</textarea></div>
+        </div>
+        <div class="admin-card" style="opacity:0.85;">
+            <h3 style="color:#cbd5e1;">Credit / Debit Card — Coming Soon</h3>
+            <label><input type="checkbox" name="enable_card" value="1" {% if current_tenant.enable_card %}checked{% endif %}> Coming Soon</label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">Save Payment Configuration</button>
+    </form>
+</div>
+{% endblock %}

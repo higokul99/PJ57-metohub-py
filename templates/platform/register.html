@@ -1,0 +1,307 @@
+{% extends "platform/base.html" %}
+{% block title %}Start Your Store | Metohub{% endblock %}
+{% block content %}
+<style>
+.wizard-step { display: none; }
+.wizard-step.active { display: block; }
+.step-indicator { display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative; }
+.step-indicator::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.1); z-index: 1; }
+.step-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card); border: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; z-index: 2; color: var(--text-muted); font-weight: bold; }
+.step-dot.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+.step-dot.completed { border-color: var(--primary); color: var(--primary); background: var(--bg-card); }
+</style>
+
+<div class="container" style="max-width: 680px; padding-top: 40px; padding-bottom: 60px;">
+    <div class="card">
+        <div style="text-align: center; margin-bottom: 28px;">
+            <span class="brand-badge" style="font-size: 2rem;">🛍️</span>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; margin-top: 8px;">Start Your Online Store</h2>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Join merchants worldwide. Create your branded storefront.</p>
+        </div>
+        
+        <div class="step-indicator">
+            <div class="step-dot active" id="dot-1">1</div>
+            <div class="step-dot" id="dot-2">2</div>
+            <div class="step-dot" id="dot-3">3</div>
+            <div class="step-dot" id="dot-4">4</div>
+        </div>
+
+        {% if error %}<div class="alert alert-danger"><span>⚠️</span> {{ error }}</div>{% endif %}
+        
+        <form method="POST" action="/register" id="wizardForm" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <!-- STEP 1: Personal Details -->
+            <div class="wizard-step active" id="step-1">
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; color: var(--accent-emerald); margin-bottom: 14px;">1️⃣ Personal Details</h4>
+                <div class="form-group"><label class="form-label">Full Name *</label><input type="text" id="name" name="name" class="form-control" required value="{{ form.name or '' }}"></div>
+                <div class="form-group"><label class="form-label">Email Address *</label><input type="email" id="email" name="email" class="form-control" required value="{{ form.email or '' }}"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group"><label class="form-label">Phone Number *</label><input type="text" id="phone" name="phone" class="form-control" required value="{{ form.phone or '' }}"></div>
+                    <div class="form-group">
+                        <label class="form-label">WhatsApp Number</label>
+                        <input type="text" id="whatsapp" name="whatsapp" class="form-control" value="{{ form.whatsapp or '' }}">
+                        <label style="font-size: 0.8rem; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" id="same_as_phone"> Same as Phone
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Country *</label>
+                    <select id="country" name="country" class="form-control" style="background: rgba(255,255,255,0.05); cursor: not-allowed; opacity: 0.8;" required>
+                        <option value="India" selected>India (Fixed)</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group"><label class="form-label">Password * (Min 8 chars)</label><input type="password" id="password" name="password" class="form-control" required minlength="8"></div>
+                    <div class="form-group"><label class="form-label">Confirm Password *</label><input type="password" id="confirm_password" name="confirm_password" class="form-control" required minlength="8"></div>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-primary" onclick="nextStep(1)">Continue →</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Store Details -->
+            <div class="wizard-step" id="step-2">
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; color: #818cf8; margin-bottom: 14px;">2️⃣ Store Details</h4>
+                <div class="form-group"><label class="form-label">Store Name *</label><input type="text" id="store_name" name="store_name" class="form-control" required value="{{ form.store_name or '' }}"></div>
+                <div class="form-group">
+                    <label class="form-label">Store URL Slug *</label>
+                    <div style="display: flex; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border); border-radius: var(--radius-md); overflow: hidden;">
+                        <span style="padding: 0 14px; color: var(--text-muted); font-size: 0.85rem; background: rgba(255,255,255,0.02); border-right: 1px solid var(--card-border);">/store/</span>
+                        <input type="text" id="store_slug" name="store_slug" class="form-control" style="border: none; border-radius: 0; background: transparent;" required value="{{ form.store_slug or '' }}">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Business Type *</label>
+                        <select name="business_type" class="form-select">
+                            {% for bt in ['Rental Jewellery','Mobile Cases','Perfumes & Fragrances','Fashion & Apparel','Electronics','General Retail'] %}
+                            <option value="{{ bt }}" {% if form.business_type == bt %}selected{% endif %}>{{ bt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Store Currency *</label>
+                        <select name="currency" class="form-select">
+                            <option value="₹">INR (₹)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Tagline</label>
+                    <input type="text" name="tagline" class="form-control" maxlength="50" value="{{ form.tagline or '' }}" placeholder="Max 50 characters">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group"><label class="form-label">Support Email *</label><input type="email" id="support_email" name="support_email" class="form-control" required value="{{ form.support_email or '' }}"></div>
+                    <div class="form-group"><label class="form-label">Support Phone (Optional)</label><input type="text" name="contact_phone" class="form-control" value="{{ form.contact_phone or '' }}" placeholder="Call / WhatsApp"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep(2)">← Back</button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep(2)">Continue →</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Plan Selection -->
+            <div class="wizard-step" id="step-3">
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; color: var(--accent-gold); margin-bottom: 14px;">3️⃣ Select Subscription Plan</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+                    {% for p in plans %}
+                    {% set isChecked = (selected_plan == p.slug) or (form.plan_id and form.plan_id|int == p.id) %}
+                    <label class="plan-label" style="border: 1px solid {% if isChecked %}var(--primary){% else %}var(--card-border){% endif %}; background: {% if isChecked %}rgba(99,102,241,0.1){% else %}rgba(255,255,255,0.02){% endif %}; padding: 14px; border-radius: var(--radius-md); cursor: pointer;" onclick="updatePlanSelection(this, {{ p.id }}, '{{ p.name }}', {{ p.price_weekly }}, {{ p.week_count }})">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color:#fff;">{{ p.name }}</strong>
+                            <input type="radio" id="plan_{{ p.id }}" name="plan_id" value="{{ p.id }}" {% if isChecked %}checked{% endif %} style="accent-color: var(--primary);">
+                        </div>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #fff;">₹{{ p.price_weekly|money0 }} <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: normal;">/wk</span></div>
+                        <div style="font-size: 0.73rem; color: #34d399; font-weight: 600; margin: 8px 0;">🎁 3 Months Free Trial</div>
+                        <div style="font-size: 0.76rem; color: var(--text-secondary);">{{ p.description }}</div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep(3)">← Back</button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep(3)">Confirm Plan →</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: Payment -->
+            <div class="wizard-step" id="step-4">
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; color: #34d399; margin-bottom: 14px;">4️⃣ Complete Payment</h4>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #fff;">Total for 52 Weeks (<span id="selected_plan_name">Base</span>)</h3>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin: 10px 0;">₹<span id="total_amount">0</span></div>
+                    
+                    <div style="margin: 20px auto; width: 150px; height: 150px; background: #fff; padding: 10px; border-radius: 8px; border: 2px solid var(--card-border);">
+                        <!-- Placeholder QR Code. Replace src with real QR if available -->
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=admin@metohub&pn=Metohub&am=0&cu=INR" id="qr_image" style="width: 100%; height: 100%; object-fit: contain;">
+                    </div>
+                    
+                    <a href="#" id="upi_link" class="btn btn-primary" style="background: #00d289; border-color: #00d289; color: #000; font-weight: 700;"><i class="fas fa-mobile-alt"></i> Pay with UPI App</a>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Upload Payment Screenshot Proof *</label>
+                    <input type="file" id="subscription_proof" name="subscription_proof" accept="image/*" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Transaction ID / UTR Code (Optional)</label>
+                    <input type="text" name="transaction_id" class="form-control" placeholder="e.g. 123456789012" value="{{ form.transaction_id or '' }}">
+                </div>
+
+                <div class="form-group" style="margin-top: 20px; display: flex; align-items: flex-start; gap: 10px; background: rgba(255,255,255,0.02); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--card-border);">
+                    <input type="checkbox" id="terms_consent" name="terms_consent" required style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--primary);">
+                    <label for="terms_consent" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer; margin: 0; line-height: 1.4;">
+                        I agree to the <a href="javascript:void(0)" onclick="openTermsModal()" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Terms of Use</a>. I understand that selling illegal or prohibited items will result in immediate suspension.
+                    </label>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep(4)">← Back</button>
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1; margin-left: 10px;"><span>🚀</span> Create Store</button>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--text-muted);" id="login_link">Already have a store account? <a href="/login" style="color: #818cf8; font-weight: 600;">Sign in here</a></div>
+        </form>
+    </div>
+</div>
+
+<!-- Terms Modal -->
+<div id="termsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div style="background: var(--bg-card); width: 90%; max-width: 500px; border-radius: 12px; border: 1px solid var(--card-border); overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+        <div style="padding: 16px 20px; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.25rem;">{{ terms_page.title if terms_page else 'Terms of Use' }}</h3>
+            <button onclick="closeTermsModal()" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        <div style="padding: 20px; max-height: 60vh; overflow-y: auto; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+            {{ terms_page.content|safe if terms_page else 'Terms of use content not found.' }}
+        </div>
+        <div style="padding: 16px 20px; border-top: 1px solid var(--card-border); text-align: right; background: rgba(255,255,255,0.02);">
+            <button onclick="closeTermsModal()" class="btn btn-primary">Understood</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+document.getElementById('same_as_phone').addEventListener('change', function() {
+    if (this.checked) {
+        document.getElementById('whatsapp').value = document.getElementById('phone').value;
+    }
+});
+
+document.getElementById('phone').addEventListener('input', function() {
+    if (document.getElementById('same_as_phone').checked) {
+        document.getElementById('whatsapp').value = this.value;
+    }
+});
+
+document.getElementById('store_name').addEventListener('input', function(e) {
+    const slugInput = document.getElementById('store_slug');
+    if (!slugInput.dataset.manual) {
+        slugInput.value = e.target.value.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
+    }
+});
+document.getElementById('store_slug').addEventListener('input', function() { this.dataset.manual = 'true'; });
+
+function validateStep(step) {
+    if (step === 1) {
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const pwd = document.getElementById('password').value;
+        const cpwd = document.getElementById('confirm_password').value;
+        if (!name || !email || !phone || !pwd || !cpwd) { alert("Please fill all required fields in Step 1."); return false; }
+        if (pwd.length < 8) { alert("Password must be at least 8 characters."); return false; }
+        if (pwd !== cpwd) { alert("Passwords do not match."); return false; }
+        return true;
+    }
+    if (step === 2) {
+        const sname = document.getElementById('store_name').value;
+        const slug = document.getElementById('store_slug').value;
+        const semail = document.getElementById('support_email').value;
+        if (!sname || !slug || !semail) { alert("Please fill all required fields in Step 2."); return false; }
+        return true;
+    }
+    if (step === 3) {
+        return true; 
+    }
+    if (step === 4) {
+        if (!document.getElementById('terms_consent').checked) {
+            alert("You must agree to the Terms of Use before creating a store.");
+            return false;
+        }
+        return true;
+    }
+    return true;
+}
+
+function nextStep(step) {
+    if (!validateStep(step)) return;
+    document.getElementById('step-' + step).classList.remove('active');
+    document.getElementById('dot-' + step).classList.replace('active', 'completed');
+    currentStep = step + 1;
+    document.getElementById('step-' + currentStep).classList.add('active');
+    document.getElementById('dot-' + currentStep).classList.add('active');
+    if (currentStep > 1) document.getElementById('login_link').style.display = 'none';
+}
+
+function prevStep(step) {
+    document.getElementById('step-' + step).classList.remove('active');
+    document.getElementById('dot-' + step).classList.remove('active');
+    currentStep = step - 1;
+    document.getElementById('step-' + currentStep).classList.add('active');
+    document.getElementById('dot-' + currentStep).classList.replace('completed', 'active');
+    if (currentStep === 1) document.getElementById('login_link').style.display = 'block';
+}
+
+let selectedPlanData = { name: 'Base', weekly: 49.00, weeks: 52 };
+{% if plans %}
+{% for p in plans %}
+    {% if p.slug == 'base' %}
+    selectedPlanData = { name: '{{ p.name }}', weekly: {{ p.price_weekly }}, weeks: {{ p.week_count }} };
+    {% endif %}
+{% endfor %}
+{% endif %}
+
+function updatePlanSelection(element, id, name, weekly, weeks) {
+    document.querySelectorAll('.plan-label').forEach(l => {
+        l.style.borderColor = 'var(--card-border)';
+        l.style.background = 'rgba(255,255,255,0.02)';
+    });
+    element.style.borderColor = 'var(--primary)';
+    element.style.background = 'rgba(99,102,241,0.1)';
+    document.getElementById('plan_' + id).checked = true;
+    
+    selectedPlanData = { name, weekly, weeks };
+    updatePaymentUI();
+}
+
+function updatePaymentUI() {
+    const total = (selectedPlanData.weekly * selectedPlanData.weeks).toFixed(2);
+    document.getElementById('selected_plan_name').innerText = selectedPlanData.name;
+    document.getElementById('total_amount').innerText = total;
+    const upiUrl = `upi://pay?pa=admin@metohub&pn=Metohub&am=${total}&cu=INR`;
+    document.getElementById('qr_image').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiUrl)}`;
+    document.getElementById('upi_link').href = upiUrl;
+}
+
+// Initialize payment UI on load
+updatePaymentUI();
+
+function openTermsModal() {
+    document.getElementById('termsModal').style.display = 'flex';
+}
+function closeTermsModal() {
+    document.getElementById('termsModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+document.getElementById('termsModal').addEventListener('click', function(e) {
+    if (e.target === this) closeTermsModal();
+});
+</script>
+{% endblock %}

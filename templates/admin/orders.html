@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="admin-card" style="padding:1.25rem 1.5rem;">
+    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+        <h2 style="margin:0;color:#fff;">Orders & Reservations</h2>
+        <div style="display:flex; gap:0.5rem;">
+            <a href="/admin/orders" class="btn btn-secondary">All</a>
+            <a href="/admin/orders?status=pending" class="btn btn-secondary">Pending</a>
+            <a href="/admin/orders?status=processing" class="btn btn-secondary">Processing</a>
+            <a href="/admin/orders?status=completed" class="btn btn-secondary">Completed</a>
+        </div>
+    </div>
+</div>
+{% if updated %}<div class="admin-alert success auto-dismiss">Order status updated successfully!</div>{% endif %}
+<div class="admin-card">
+{% if not orders %}
+<div style="text-align:center;padding:3rem;color:var(--admin-text-muted);"><h3>No orders found</h3></div>
+{% else %}
+<table class="admin-table">
+<thead><tr><th>Order Ref</th><th>Customer</th><th>Date</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+<tbody>
+{% for ord in orders %}
+<tr>
+    <td><a href="/admin/orders/{{ ord.id }}" style="color:#fff;font-weight:700;">{{ ord.order_number }}</a></td>
+    <td>{{ ord.customer_name }}<br><small style="color:var(--admin-text-muted);">{{ ord.customer_email }}</small></td>
+    <td>{{ ord.created_at.strftime('%b %d, %Y') if ord.created_at else '' }}</td>
+    <td>{{ ord.items|length }}</td>
+    <td><strong>{{ currency }}{{ ord.total_amount|money }}</strong></td>
+    <td><span class="badge-status {{ 'completed' if ord.payment_status=='paid' else 'pending' }}">{{ ord.payment_status|upper }}</span><div style="font-size:0.72rem;">{{ ord.payment_method.replace('_',' ')|upper }}{% if ord.payment_proof %} • Proof{% endif %}</div></td>
+    <td><span class="badge-status {{ ord.status }}">{{ ord.status|capitalize }}</span></td>
+    <td><a href="/admin/orders/{{ ord.id }}" class="btn btn-secondary">Manage</a></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+</div>
+{% endblock %}

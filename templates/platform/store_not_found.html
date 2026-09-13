@@ -1,0 +1,9 @@
+{% extends "platform/base.html" %}
+{% block title %}Store Not Found | Metohub{% endblock %}
+{% block content %}
+<div class="container" style="padding: 100px 20px; text-align: center;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem;">Store Not Found</h1>
+    <p style="color: var(--text-muted); font-size: 1.2rem; margin-bottom: 2rem;">The store "<strong>{{ slug }}</strong>" does not exist or has been temporarily suspended.</p>
+    <a href="/" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Explore Other Stores</a>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Metohub - E-Commerce Platform{% endblock %}</title>
+    <meta name="description" content="Launch your quick, modern e-commerce or rental storefront in 60 seconds.">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<header class="navbar">
+    <div class="container nav-inner">
+        <a href="/" class="nav-brand">
+            <span style="font-size: 1.5rem;">🛍️</span>
+            <span class="brand-badge">Metohub</span>
+        </a>
+        <nav class="nav-links">
+            <a href="/#stores" class="nav-link">Live Stores</a>
+            <a href="/#plans" class="nav-link">Plans</a>
+            <a href="/#features" class="nav-link">Features</a>
+        </nav>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            {% if user_id %}
+                <a href="/admin/dashboard" class="btn btn-secondary btn-sm"><span>🏬</span> {{ tenant_name or 'Dashboard' }}</a>
+                <a href="/logout" class="btn btn-danger-outline btn-sm">Logout</a>
+            {% else %}
+                <a href="/login" class="btn btn-secondary btn-sm">Seller Login</a>
+                <a href="/register" class="btn btn-primary btn-sm">Start Your Store</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer style="margin-top: 80px; padding: 50px 0 30px; border-top: 1px solid var(--card-border); background: rgba(9, 13, 22, 0.95);">
+    <div class="container" style="display: flex; flex-direction: column; gap: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 30px;">
+            <div style="max-width: 380px;">
+                <div style="display: flex; align-items: center; gap: 10px; font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 10px;">
+                    <span>🛍️</span><span class="brand-badge">Metohub</span>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                    The lightning-fast e-commerce platform. Launch retail and rental storefronts in under 60 seconds.
+                </p>
+            </div>
+            <div style="display: flex; gap: 48px; flex-wrap: wrap;">
+                <div>
+                    <h5 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 14px;">Demo Stores</h5>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem;">
+                        <li><a href="/store/aura-jewels" style="color: var(--text-secondary);">💍 Aura Jewels (Rental)</a></li>
+                        <li><a href="/store/casecraft" style="color: var(--text-secondary);">📱 CaseCraft (Retail)</a></li>
+                        <li><a href="/store/scentaura" style="color: var(--text-secondary);">🌸 ScentAura (Perfumes)</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 14px;">Platform</h5>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem;">
+                        <li><a href="/register" style="color: var(--text-secondary);">Create Account</a></li>
+                        <li><a href="/login" style="color: var(--text-secondary);">Merchant Login</a></li>
+                        <li><a href="/#plans" style="color: var(--text-secondary);">Base, Essential &amp; Pro Plans</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div style="padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--text-muted); flex-wrap: wrap; gap: 12px;">
+            <div>&copy; {{ year or 2026 }} Metohub Platform Inc.</div>
+            <div style="display: flex; gap: 16px;">
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
