@@ -1,0 +1,1 @@
+Act as the QA Engineer, Expert of code checking and app code. Work of most important test case to test the app and create coverage report.
