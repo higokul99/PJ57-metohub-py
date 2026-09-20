@@ -685,7 +685,7 @@ async def settings_post(
 
             # Handle multiple banner uploads
             meta = plan_meta(db, tenant)
-            banner_limit = meta["plan"].banner_limit
+            banner_limit = meta["banner_limit"]
             
             store_banners = form.getlist("store_banners")
             current_count = db.query(func.count(TenantBanner.id)).filter(TenantBanner.tenant_id == tenant.id).scalar()
