@@ -17,6 +17,16 @@ app.include_router(platform.router)
 app.include_router(storefront.router)
 app.include_router(admin.router)
 
+from app.templating import templates
+import logging
+
+logger = logging.getLogger(__name__)
+
+@app.exception_handler(Exception)
+async def custom_500_handler(request: Request, exc: Exception):
+    logger.error(f"Internal Server Error: {exc}", exc_info=True)
+    return templates.TemplateResponse("500.html", {"request": request}, status_code=500)
+
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):

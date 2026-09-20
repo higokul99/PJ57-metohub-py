@@ -1048,10 +1048,6 @@ body.store-body {
 }
 
 .detail-price-box {
-    background: var(--store-card-bg);
-    border: 1px solid var(--store-card-border);
-    border-radius: 14px;
-    padding: 1.25rem;
     margin-bottom: 1.5rem;
 }
 
@@ -1062,19 +1058,19 @@ body.store-body {
 }
 
 .price-big .sym {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: var(--store-text);
 }
 
 .price-big .val {
-    font-size: 2.4rem;
+    font-size: 1.35rem;
     font-weight: 800;
     color: var(--store-text);
 }
 
 .price-big .period {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: var(--store-muted);
 }
 

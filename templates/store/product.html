@@ -6,6 +6,12 @@
 {% endblock %}
 {% block extra_css %}
 .product-detail-layout, .product-layout-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 3rem; align-items: start; }
+@media (max-width: 768px) {
+    .product-detail-layout, .product-layout-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .product-gallery-card { padding: 1rem; width: 100%; box-sizing: border-box; overflow: hidden; }
+    .main-image-viewport { aspect-ratio: 1 / 1; width: 100%; height: auto !important; }
+    .main-zoom-image { width: 100%; height: 100%; object-fit: cover; }
+}
 {% endblock %}
 {% block body %}
 <div class="product-breadcrumb-wrap"><div class="container"><nav class="breadcrumb-nav">
